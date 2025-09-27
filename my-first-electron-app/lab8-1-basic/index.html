@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lab8-1-basic</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #49d928 0%, #38f9d7 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+    }
+    .title {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .subtitle {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+    .button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid white;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px;
+    }
+    .button:hover {
+      background: white;
+      color: #43e97b;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .info {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    img {
+      width: 80px;
+      margin-bottom: 20px;
+    }
+    .calc-box {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    .calc-box input {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      text-align: center;
+      width: 100px;
+    }
+    #result {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img class="logo" src="https://cdn-icons-png.flaticon.com/512/3524/3524630.png" alt="Gear Icon">
+    <h1 class="title">⚙️ Hello Electron!</h1>
+
+    
+
+    <button class="button" onclick="showAlert()">🎉 Click Me!</button>
+    <button class="button" onclick="showTime()">⏰ Show Time</button>
+    <button class="button" onclick="changeColor()">🎨 Change Color</button>
+    <button class="button" onclick="showDate()">📅 Show Date</button>
+
+    
+    <div class="calc-box">
+  <strong>🧮 Simple Calculator</strong><br>
+  <input id="num1" type="number" placeholder="ตัวเลขที่ 1">
+  <input id="num2" type="number" placeholder="ตัวเลขที่ 2"><br>
+  <button class="button" onclick="calculate('+')">➕ บวก</button>
+  <button class="button" onclick="calculate('-')">➖ ลบ</button>
+  <button class="button" onclick="calculate('*')">✖️ คูณ</button>
+  <div id="result">ผลลัพธ์จะแสดงที่นี่</div>
+</div>
+
+    
+    <div class="info">
+      <strong>🖥️ System Information:</strong>
+      <div id="systemInfo">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    console.log('🎨 Renderer Process Running');
+
+    function showAlert() {
+      alert('🎉 ยินดีต้อนรับสู่ Electron App ที่ปรับแต่งแล้ว!');
+    }
+
+    function showTime() {
+      alert(`⏰ เวลา: ${new Date().toLocaleTimeString('th-TH')}`);
+    }
+
+    function showDate() {
+      alert(`📅 วันนี้คือ: ${new Date().toLocaleDateString('th-TH')}`);
+    }
+
+   function calculate(op) {
+  const a = parseFloat(document.getElementById("num1").value);
+  const b = parseFloat(document.getElementById("num2").value);
+  const resultBox = document.getElementById("result");
+
+  if (!isNaN(a) && !isNaN(b)) {
+    let res;
+    switch(op) {
+      case '+': res = a + b; break;
+      case '-': res = a - b; break;
+      case '*': res = a * b; break;
+      default: res = "⚠️ ไม่รู้จัก operation"; 
+    }
+    resultBox.textContent = `✅ ผลลัพธ์คือ: ${res}`;
+  } else {
+    resultBox.textContent = "⚠️ กรุณากรอกตัวเลขให้ครบ";
+  }
+}
+
+
+    const colors = [
+      'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+    ];
+    let currentColorIndex = 0;
+    function changeColor() {
+      currentColorIndex = (currentColorIndex + 1) % colors.length;
+      document.body.style.background = colors[currentColorIndex];
+    }
+
+    function displaySystemInfo() {
+      const info = document.getElementById('systemInfo');
+      info.innerHTML = `
+        <div>🌐 Platform: ${navigator.platform}</div>
+        <div>📱 Screen: ${screen.width} x ${screen.height}</div>
+        <div>🌍 Language: ${navigator.language}</div>
+      `;
+    }
+    window.addEventListener('DOMContentLoaded', displaySystemInfo);
+  </script>
+</body>
+</html>
