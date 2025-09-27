@@ -1,17 +1,15 @@
-1.	เพิ่มไอคอนฟันเฟือง
-o	<img class="logo" src="https://cdn-icons-png.flaticon.com/512/3524/3524630.png" alt="Gear Icon">
-2.	เพิ่มปุ่ม Calculator แบบ interactive
+### 1.	เพิ่มไอคอนฟันเฟือง
+` o	<img class="logo" src="https://cdn-icons-png.flaticon.com/512/3524/3524630.png" alt="Gear Icon"> `
+
+### 2.	เพิ่มปุ่ม Calculator แบบ interactive
 o	กล่อง .calc-box
 o	ป้อนตัวเลข 2 ช่อง
 o	ปุ่ม 3 ปุ่ม: บวก ➕, ลบ ➖, คูณ ✖️
-3.	แก้ไขฟังก์ชัน calculate
-o	รองรับ +, -, *
-o	แสดงผลใน <div id="result"> แทน alert
-4.	ปุ่มเดิมยังอยู่
-o	showAlert(), showTime(), changeColor(), showDate()
-5.	ฟังก์ชัน changeColor
-o	เปลี่ยน background ของ body เป็น gradient สลับสี 4 แบบ
-6.	ฟังก์ชัน displaySystemInfo
-o	แสดง platform, screen size, language
-
-
+` <div class="calc-box">
+  <input id="num1" type="number" placeholder="ตัวเลขที่ 1">
+  <input id="num2" type="number" placeholder="ตัวเลขที่ 2"><br>
+  <button onclick="calculate('+')">➕ บวก</button>
+  <button onclick="calculate('-')">➖ ลบ</button>
+  <button onclick="calculate('*')">✖️ คูณ</button>
+  <div id="result">ผลลัพธ์จะแสดงที่นี่</div>
+</div> `
