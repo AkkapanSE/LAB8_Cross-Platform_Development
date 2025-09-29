@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Wallboard - Lab 8.3</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 20px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      background: linear-gradient(45deg, #4CAF50, #2196F3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .section h3 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.4em;
+    }
+    
+    .button {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .button-secondary {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+    }
+    
+    .button-warning {
+      background: linear-gradient(135deg, #ff9800, #f57c00);
+    }
+    
+    .button-danger {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+    }
+    
+    .result-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      border-left: 4px solid #4CAF50;
+    }
+    
+    .file-content {
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      resize: vertical;
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+    }
+    
+    .loading { color: #FFD700; border-left-color: #FFD700; }
+    .success { color: #90EE90; border-left-color: #4CAF50; }
+    .error { color: #FF6B6B; border-left-color: #f44336; }
+    
+    /* Dashboard Styles */
+    .dashboard-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .update-time {
+      font-size: 12px;
+      color: #ccc;
+      margin-left: auto;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 5px 10px;
+      border-radius: 15px;
+    }
+    
+    .agents-list {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .agent-card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .agent-card:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .agent-info {
+      flex: 1;
+    }
+    
+    .agent-name {
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .agent-details {
+      font-size: 13px;
+      color: #ccc;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .agent-status {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .status-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      min-width: 80px;
+    }
+    
+    .status-available { 
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+    }
+    .status-busy { 
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+    }
+    .status-break { 
+      background: linear-gradient(135deg, #ff9800, #f57c00);
+      color: white;
+    }
+    .status-offline { 
+      background: linear-gradient(135deg, #757575, #616161);
+      color: white;
+    }
+    
+    .status-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-btn.active {
+      box-shadow: 0 0 0 2px white;
+    }
+    
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 25px;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .stat-card h4 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .stat-card span {
+      font-size: 2em;
+      font-weight: bold;
+      display: block;
+    }
+    
+    /* Chart container */
+    .chart-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      border-radius: 10px;
+      margin-top: 20px;
+      min-height: 300px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Settings Panel */
+    .settings-panel {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    
+    .setting-item {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+    
+    .setting-label {
+      flex: 1;
+      font-weight: 600;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #4CAF50;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    /* Keyboard Shortcuts Help */
+    .shortcuts-help {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .shortcut-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    
+    .shortcut-key {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .agent-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .agent-status {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .dashboard-controls {
+        justify-content: center;
+      }
+      
+      .update-time {
+        margin-left: 0;
+        margin-top: 10px;
+      }
+    }
+
+    /* Animation */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    .new-call {
+      animation: pulse 1s 3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Agent Wallboard Dashboard</h1>
+      <p>Real-time Agent Monitoring & Management System</p>
+      <div class="update-time" id="lastUpdate">อัพเดท: -</div>
+    </div>
+
+    <!-- Agent Status Dashboard -->
+    <div class="section">
+      <h3>👥 Agent Status Dashboard</h3>
+      <p>จัดการและติดตามสถานะ Agents แบบ Real-time</p>
+      
+      <div class="dashboard-controls">
+        <button class="button" onclick="addNewAgent()">➕ เพิ่ม Agent</button>
+        <button class="button button-secondary" onclick="exportAgentReport()">📈 Export Report</button>
+        <button class="button button-secondary" onclick="refreshDashboard()">🔄 Refresh</button>
+        <button class="button button-warning" onclick="simulateIncomingCall()">📞 สุ่มสายเข้า</button>
+        <button class="button" onclick="toggleAutoRefresh()" id="autoRefreshBtn">⏰ เปิด Auto-Refresh</button>
+      </div>
+      
+      <div class="stats-summary">
+        <div class="stat-card">
+          <h4>🟢 Available</h4>
+          <span id="availableCount">0</span>
+        </div>
+        <div class="stat-card">
+          <h4>🔴 Busy</h4>
+          <span id="busyCount">0</span>
+        </div>
+        <div class="stat-card">
+          <h4>🟡 Break</h4>
+          <span id="breakCount">0</span>
+        </div>
+        <div class="stat-card">
+          <h4>📞 Total Calls</h4>
+          <span id="totalCalls">0</span>
+        </div>
+        <div class="stat-card">
+          <h4>👥 Total Agents</h4>
+          <span id="totalAgents">0</span>
+        </div>
+      </div>
+      
+      <div id="agentsList" class="agents-list">
+        <!-- Agents จะถูกแสดงที่นี่ -->
+      </div>
+    </div>
+
+    <!-- Performance Charts -->
+    <div class="section">
+      <h3>📈 Performance Analytics</h3>
+      <p>สถิติและข้อมูลการทำงานของ Agents</p>
+      
+      <div class="chart-container">
+        <canvas id="performanceChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- File Operations -->
+    <div class="section">
+      <h3>📁 File Operations</h3>
+      <p>จัดการไฟล์ด้วย Native OS Dialogs</p>
+      
+      <button class="button" onclick="openFile()">📂 เปิดไฟล์</button>
+      <button class="button button-secondary" onclick="exportAgentData()">📊 Export Agent Data</button>
+      <button class="button button-secondary" onclick="saveCurrentContent()">💾 บันทึกเนื้อหา</button>
+      <button class="button" onclick="backupSettings()">💾 Backup Settings</button>
+      
+      <div class="result-box" id="fileResult">กดปุ่มเพื่อทดสอบ file operations</div>
+      
+      <div id="fileContent" class="file-content" style="display: none;"></div>
+    </div>
+
+    <!-- Desktop Notifications -->
+    <div class="section">
+      <h3>🔔 Smart Notifications</h3>
+      <p>ระบบแจ้งเตือนอัจฉริยะ</p>
+      
+      <button class="button" onclick="testBasicNotification()">🔔 ทดสอบ Notification</button>
+      <button class="button button-secondary" onclick="testAgentLogin()">🟢 Agent Login</button>
+      <button class="button button-secondary" onclick="testCallReceived()">📞 Call Received</button>
+      <button class="button button-warning" onclick="testUrgentAlert()">🚨 Urgent Alert</button>
+      <button class="button button-danger" onclick="testSoundNotification()">🔊 Test Sound</button>
+      
+      <div class="result-box" id="notificationResult">กดปุ่มเพื่อทดสอบ notifications</div>
+    </div>
+
+    <!-- System Tray Integration -->
+    <div class="section">
+      <h3>🖱️ System Tray Integration</h3>
+      <p>ควบคุมแอปผ่าน System Tray</p>
+      
+      <button class="button" onclick="testHideToTray()">👁️ ซ่อนไป Tray</button>
+      <button class="button button-secondary" onclick="testTrayNotification()">🔔 แจ้งเตือนจาก Tray</button>
+      <button class="button" onclick="showShortcutsHelp()">⌨️ แสดง Keyboard Shortcuts</button>
+      
+      <div class="result-box" id="trayResult">
+🎯 System Tray Features:
+• คลิกขวาที่ไอคอนใน taskbar เพื่อเปิดเมนู
+• เปลี่ยนสถานะ Agent ได้จาก tray menu  
+• แสดงจำนวน Available Agents ใน tooltip
+• ซ่อน/แสดงแอปได้จาก tray
+• ปิดโปรแกรมได้จาก tray menu
+
+💡 ลองปิดหน้านี้ - แอปจะซ่อนไปใน system tray!
+      </div>
+
+      <!-- Keyboard Shortcuts Help -->
+      <div class="shortcuts-help" id="shortcutsHelp" style="display: none;">
+        <div class="shortcut-item">
+          <span>แสดง/ซ่อน แอป</span>
+          <span class="shortcut-key">Ctrl+4</span>
+        </div>
+        <div class="shortcut-item">
+          <span>เปลี่ยนเป็น Available</span>
+          <span class="shortcut-key">Ctrl+1</span>
+        </div>
+        <div class="shortcut-item">
+          <span>เปลี่ยนเป็น Busy</span>
+          <span class="shortcut-key">Ctrl+2</span>
+        </div>
+        <div class="shortcut-item">
+          <span>เปลี่ยนเป็น Break</span>
+          <span class="shortcut-key">Ctrl+3</span>
+        </div>
+        <div class="shortcut-item">
+          <span>ซ่อนไป Tray</span>
+          <span class="shortcut-key">Ctrl+5</span>
+        </div>
+        <div class="shortcut-item">
+          <span>ออกจากโปรแกรม</span>
+          <span class="shortcut-key">Ctrl+Q</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="section">
+      <h3>⚙️ System Settings</h3>
+      <p>การตั้งค่าระบบ</p>
+      
+      <div class="settings-panel">
+        <div class="setting-item">
+          <div class="setting-label">🔔 Enable Sound Notifications</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="soundEnabled" checked onchange="toggleSound(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">🔄 Auto-Refresh Every 30s</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoRefresh" checked onchange="toggleAutoRefreshSetting(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-label">📞 Simulate Incoming Calls</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="simulateCalls" checked onchange="toggleCallSimulation(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <button class="button" onclick="saveSettings()">💾 Save Settings</button>
+      <button class="button button-secondary" onclick="loadSettings()">📥 Load Settings</button>
+      <button class="button button-warning" onclick="resetSettings()">🔄 Reset Settings</button>
+    </div>
+
+    <!-- Text Editor -->
+    <div class="section">
+      <h3>📝 Text Editor</h3>
+      <p>เขียนและบันทึกข้อความ</p>
+      
+      <textarea id="textEditor" placeholder="เขียนข้อความที่นี่... จะสามารถบันทึกเป็นไฟล์ได้">
+# Agent Wallboard Report
+วันที่: ${new Date().toLocaleDateString('th-TH')}
+เวลา: ${new Date().toLocaleTimeString('th-TH')}
+
+## สรุปสถานะ Agents
+- Available: 1 คน
+- Busy: 1 คน  
+- Break: 1 คน
+- Total Calls: 35 calls
+
+## สถิติประสิทธิภาพ
+- Average Call Time: 245 วินาที
+- Average Wait Time: 45 วินาที
+- Service Level: 85%
+
+## หมายเหตุ
+รายงานนี้ถูกสร้างขึ้นอัตโนมัติจาก Agent Wallboard System
+      </textarea>
+    </div>
+  </div>
+
+  <script>
+    // ===== GLOBAL VARIABLES =====
+    let agents = [
+      { 
+        id: 'AG001', 
+        name: 'Alice Johnson', 
+        status: 'available', 
+        extension: '1001', 
+        department: 'Sales', 
+        calls: 15, 
+        lastCall: '10:30',
+        loginTime: '08:00'
+      },
+      { 
+        id: 'AG002', 
+        name: 'Bob Smith', 
+        status: 'busy', 
+        extension: '1002', 
+        department: 'Support', 
+        calls: 8, 
+        lastCall: '10:25',
+        loginTime: '08:15'
+      },
+      { 
+        id: 'AG003', 
+        name: 'Carol Lee', 
+        status: 'break', 
+        extension: '1003', 
+        department: 'Sales', 
+        calls: 12, 
+        lastCall: '09:45',
+        loginTime: '08:30'
+      }
+    ];
+
+    let autoRefreshInterval = null;
+    let performanceChart = null;
+    let settings = {
+      soundEnabled: true,
+      autoRefresh: true,
+      simulateCalls: true
+    };
+
+    // ===== DASHBOARD FUNCTIONS =====
+    function renderAgents() {
+      const agentsList = document.getElementById('agentsList');
+      const availableCount = agents.filter(a => a.status === 'available').length;
+      const busyCount = agents.filter(a => a.status === 'busy').length;
+      const breakCount = agents.filter(a => a.status === 'break').length;
+      const totalCalls = agents.reduce((sum, agent) => sum + agent.calls, 0);
+      
+      // อัพเดทสถิติ
+      document.getElementById('availableCount').textContent = availableCount;
+      document.getElementById('busyCount').textContent = busyCount;
+      document.getElementById('breakCount').textContent = breakCount;
+      document.getElementById('totalCalls').textContent = totalCalls;
+      document.getElementById('totalAgents').textContent = agents.length;
+      
+      // อัพเดท tray tooltip
+      updateTrayTooltip(availableCount);
+      
+      // เรนเดอร์ agents
+      agentsList.innerHTML = agents.map(agent => `
+        <div class="agent-card" data-agent-id="${agent.id}">
+          <div class="agent-info">
+            <div class="agent-name">
+              <span class="status-indicator" style="color: ${
+                agent.status === 'available' ? '#4CAF50' : 
+                agent.status === 'busy' ? '#f44336' : '#ff9800'
+              }">●</span>
+              ${agent.name} 
+              <span style="font-size: 0.9em; opacity: 0.8;">(${agent.id})</span>
+            </div>
+            <div class="agent-details">
+              <span>📞 ${agent.extension}</span>
+              <span>🏢 ${agent.department}</span>
+              <span>📊 ${agent.calls} calls</span>
+              <span>⏰ Login: ${agent.loginTime}</span>
+              ${agent.lastCall ? `<span>📞 Last: ${agent.lastCall}</span>` : ''}
+            </div>
+          </div>
+          <div class="agent-status">
+            <button class="status-btn status-available ${agent.status === 'available' ? 'active' : ''}" 
+                    onclick="changeAgentStatus('${agent.id}', 'available')">🟢 Available</button>
+            <button class="status-btn status-busy ${agent.status === 'busy' ? 'active' : ''}" 
+                    onclick="changeAgentStatus('${agent.id}', 'busy')">🔴 Busy</button>
+            <button class="status-btn status-break ${agent.status === 'break' ? 'active' : ''}" 
+                    onclick="changeAgentStatus('${agent.id}', 'break')">🟡 Break</button>
+            <button class="status-btn status-offline" 
+                    onclick="removeAgent('${agent.id}')">❌ Remove</button>
+          </div>
+        </div>
+      `).join('');
+      
+      // อัพเดทเวลาล่าสุด
+      document.getElementById('lastUpdate').textContent = `อัพเดท: ${new Date().toLocaleTimeString('th-TH')}`;
+      
+      // อัพเดท chart
+      renderPerformanceChart();
+    }
+
+    function changeAgentStatus(agentId, newStatus) {
+      const agent = agents.find(a => a.id === agentId);
+      if (agent) {
+        const oldStatus = agent.status;
+        agent.status = newStatus;
+        agent.lastCall = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        
+        // เพิ่มจำนวน calls ถ้าเปลี่ยนเป็น busy
+        if (newStatus === 'busy' && oldStatus !== 'busy') {
+          agent.calls++;
+        }
+        
+        // แจ้งเตือนการเปลี่ยนสถานะ
+        if (oldStatus !== newStatus) {
+          window.nativeAPI.notifyAgentEvent(agent.name, 'status_change', { 
+            oldStatus, 
+            newStatus,
+            agentId: agent.id
+          });
+          
+          // เล่นเสียงถ้าเปิดไว้
+          if (settings.soundEnabled) {
+            window.nativeAPI.playNotificationSound('status_change');
+          }
+        }
+        
+        renderAgents();
+        saveSettings();
+      }
+    }
+
+    function addNewAgent() {
+      const newId = 'AG' + String(agents.length + 1).padStart(3, '0');
+      const newAgent = {
+        id: newId,
+        name: `Agent ${newId}`,
+        status: 'available',
+        extension: String(1000 + agents.length + 1),
+        department: 'General',
+        calls: 0,
+        lastCall: null,
+        loginTime: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      agents.push(newAgent);
+      renderAgents();
+      saveSettings();
+      
+      // แจ้งเตือน
+      window.nativeAPI.notifyAgentEvent(newAgent.name, 'login', {});
+      
+      if (settings.soundEnabled) {
+        window.nativeAPI.playNotificationSound('login');
+      }
+    }
+
+    function removeAgent(agentId) {
+      const agent = agents.find(a => a.id === agentId);
+      if (agent && confirm(`ต้องการลบ ${agent.name} ออกใช่ไหม?`)) {
+        agents = agents.filter(a => a.id !== agentId);
+        renderAgents();
+        saveSettings();
+        
+        // แจ้งเตือน
+        window.nativeAPI.notifyAgentEvent(agent.name, 'logout', {});
+      }
+    }
+
+    // ===== CHART FUNCTIONS =====
+    function renderPerformanceChart() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      
+      if (performanceChart) {
+        performanceChart.destroy();
+      }
+      
+      const statusCounts = {
+        available: agents.filter(a => a.status === 'available').length,
+        busy: agents.filter(a => a.status === 'busy').length,
+        break: agents.filter(a => a.status === 'break').length
+      };
+      
+      const callData = agents.map(agent => agent.calls);
+      const agentNames = agents.map(agent => agent.name);
+      
+      performanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: agentNames,
+          datasets: [
+            {
+              label: 'จำนวนสายที่รับ',
+              data: callData,
+              backgroundColor: 'rgba(54, 162, 235, 0.8)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: 'white',
+                font: {
+                  size: 12
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Performance by Agent',
+              color: 'white',
+              font: {
+                size: 16
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: 'white'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            },
+            x: {
+              ticks: {
+                color: 'white'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ===== AUTO-REFRESH FUNCTIONS =====
+    function startAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+      
+      autoRefreshInterval = setInterval(() => {
+        refreshDashboard();
+        
+        // สุ่มแจ้งเตือนสายเข้า
+        if (settings.simulateCalls && Math.random() > 0.7 && agents.some(a => a.status === 'available')) {
+          const availableAgents = agents.filter(a => a.status === 'available');
+          const randomAgent = availableAgents[Math.floor(Math.random() * availableAgents.length)];
+          
+          // แจ้งเตือนสายเข้า
+          window.nativeAPI.notifyAgentEvent(randomAgent.name, 'call_received', {
+            callerNumber: '02-' + Math.floor(Math.random() * 1000) + '-' + Math.floor(Math.random() * 10000),
+            queue: 'Inbound Queue'
+          });
+          
+          // เล่นเสียง
+          if (settings.soundEnabled) {
+            window.nativeAPI.playNotificationSound('call');
+          }
+          
+          // เปลี่ยนสถานะเป็น busy
+          setTimeout(() => {
+            changeAgentStatus(randomAgent.id, 'busy');
+          }, 2000);
+        }
+      }, 30000); // 30 seconds
+      
+      document.getElementById('autoRefreshBtn').textContent = '⏰ ปิด Auto-Refresh';
+      document.getElementById('autoRefreshBtn').classList.add('button-warning');
+    }
+
+    function stopAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
+      document.getElementById('autoRefreshBtn').textContent = '⏰ เปิด Auto-Refresh';
+      document.getElementById('autoRefreshBtn').classList.remove('button-warning');
+    }
+
+    function toggleAutoRefresh() {
+      if (autoRefreshInterval) {
+        stopAutoRefresh();
+      } else {
+        startAutoRefresh();
+      }
+    }
+
+    function refreshDashboard() {
+      renderAgents();
+      // สุ่มเพิ่มจำนวน calls เพื่อจำลองข้อมูลจริง
+      agents.forEach(agent => {
+        if (agent.status === 'busy' && Math.random() > 0.5) {
+          agent.calls++;
+        }
+      });
+    }
+
+    // ===== FILE OPERATIONS =====
+    async function openFile() {
+      try {
+        console.log('📂 [RENDERER] เปิดไฟล์...');
+        showResult('fileResult', 'กำลังเปิด file dialog...', 'loading');
+        
+        const result = await window.nativeAPI.openFile();
+        
+        if (result.success) {
+          console.log('✅ [RENDERER] เปิดไฟล์สำเร็จ:', result.fileName);
+          
+          showResult('fileResult', 
+            `✅ เปิดไฟล์สำเร็จ!\n\n` +
+            `📄 ชื่อไฟล์: ${result.fileName}\n` +
+            `📁 ที่อยู่: ${result.filePath}\n` +
+            `📊 ขนาด: ${result.size} characters`, 
+            'success'
+          );
+          
+          // แสดงเนื้อหาไฟล์
+          const contentDiv = document.getElementById('fileContent');
+          contentDiv.style.display = 'block';
+          contentDiv.innerHTML = `<strong>📄 เนื้อหาไฟล์ ${result.fileName}:</strong>\n\n${result.content}`;
+          
+          // ใส่เนื้อหาใน text editor
+          document.getElementById('textEditor').value = result.content;
+          
+        } else if (result.cancelled) {
+          showResult('fileResult', '⏹️ ยกเลิกการเปิดไฟล์', 'info');
+        } else {
+          throw new Error(result.error);
+        }
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('fileResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function exportAgentData() {
+      try {
+        console.log('📊 [RENDERER] ส่งออกข้อมูล Agent...');
+        showResult('fileResult', 'กำลังสร้างรายงาน Agent...', 'loading');
+        
+        // สร้างข้อมูล CSV
+        const agentData = [
+          'Agent ID,Name,Status,Extension,Department,Total Calls,Last Call,Login Time',
+          ...agents.map(agent => 
+            `"${agent.id}","${agent.name}","${agent.status}","${agent.extension}","${agent.department}",${agent.calls},"${agent.lastCall || 'N/A'}","${agent.loginTime}"`
+          )
+        ].join('\n');
+        
+        const fileName = `agent-report-${new Date().toISOString().split('T')[0]}.csv`;
+        
+        const result = await window.nativeAPI.saveFile(agentData, fileName);
+        
+        if (result.success) {
+          showResult('fileResult',
+            `📊 ส่งออกข้อมูล Agent สำเร็จ!\n\n` +
+            `📄 ชื่อไฟล์: ${result.fileName}\n` +
+            `📁 ตำแหน่ง: ${result.filePath}\n` +
+            `📈 ข้อมูล: ${agents.length} agents ใน CSV format`,
+            'success'
+          );
+        } else if (result.cancelled) {
+          showResult('fileResult', '⏹️ ยกเลิกการส่งออก', 'info');
+        } else {
+          throw new Error(result.error);
+        }
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('fileResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function exportAgentReport() {
+      const csvContent = [
+        'Agent ID,Name,Status,Extension,Department,Total Calls,Last Call,Login Time',
+        ...agents.map(agent => 
+          `"${agent.id}","${agent.name}","${agent.status}","${agent.extension}","${agent.department}",${agent.calls},"${agent.lastCall || 'N/A'}","${agent.loginTime}"`
+        )
+      ].join('\n');
+      
+      const fileName = `agent-report-${new Date().toISOString().split('T')[0]}.csv`;
+      
+      try {
+        const result = await window.nativeAPI.saveFile(csvContent, fileName);
+        if (result.success) {
+          showResult('fileResult', `📊 ส่งออกรายงาน Agent สำเร็จ!\n\n📄 ${result.fileName}`, 'success');
+        }
+      } catch (error) {
+        console.error('Error exporting report:', error);
+      }
+    }
+
+    async function saveCurrentContent() {
+      const content = document.getElementById('textEditor').value;
+      
+      if (!content.trim()) {
+        showResult('fileResult', '❌ ไม่มีเนื้อหาให้บันทึก', 'error');
+        return;
+      }
+      
+      try {
+        console.log('💾 [RENDERER] บันทึกเนื้อหา...');
+        showResult('fileResult', 'กำลังบันทึกไฟล์...', 'loading');
+        
+        const fileName = `wallboard-document-${Date.now()}.txt`;
+        const result = await window.nativeAPI.saveFile(content, fileName);
+        
+        if (result.success) {
+          console.log('✅ [RENDERER] บันทึกสำเร็จ:', result.fileName);
+          
+          showResult('fileResult',
+            `💾 บันทึกเนื้อหาสำเร็จ!\n\n` +
+            `📄 ชื่อไฟล์: ${result.fileName}\n` +
+            `📁 ตำแหน่ง: ${result.filePath}\n` +
+            `📊 ขนาด: ${content.length} characters`,
+            'success'
+          );
+          
+        } else if (result.cancelled) {
+          showResult('fileResult', '⏹️ ยกเลิกการบันทึก', 'info');
+        } else {
+          throw new Error(result.error);
+        }
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('fileResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function backupSettings() {
+      const backupData = {
+        agents: agents,
+        settings: settings,
+        backupTime: new Date().toISOString(),
+        version: '1.0.0'
+      };
+      
+      try {
+        const result = await window.nativeAPI.saveFile(JSON.stringify(backupData, null, 2), `wallboard-backup-${Date.now()}.json`);
+        if (result.success) {
+          showResult('fileResult', `💾 Backup settings สำเร็จ!\n\n📄 ${result.fileName}`, 'success');
+        }
+      } catch (error) {
+        console.error('Error backing up settings:', error);
+      }
+    }
+
+    // ===== NOTIFICATION FUNCTIONS =====
+    async function testBasicNotification() {
+      try {
+        console.log('🔔 [RENDERER] ทดสอบ notification...');
+        showResult('notificationResult', 'กำลังแสดง notification...', 'loading');
+        
+        const result = await window.nativeAPI.showNotification(
+          'Agent Wallboard',
+          'นี่คือ desktop notification ทดสอบ! 🎉'
+        );
+        
+        if (result.success) {
+          showResult('notificationResult', '✅ แสดง notification สำเร็จ\n\nดู notification ที่มุมจอของคุณ', 'success');
+        } else {
+          throw new Error(result.error);
+        }
+
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('notificationResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testAgentLogin() {
+      try {
+        console.log('🟢 [RENDERER] Agent login notification...');
+        showResult('notificationResult', 'แจ้งเตือน Agent เข้าสู่ระบบ...', 'loading');
+        
+        const result = await window.nativeAPI.notifyAgentEvent(
+          'Alice Johnson',
+          'login',
+          { time: new Date().toLocaleTimeString('th-TH') }
+        );
+        
+        if (result.success) {
+          showResult('notificationResult', '🟢 แจ้งเตือน Agent Login สำเร็จ\n\nAgent Alice Johnson เข้าสู่ระบบแล้ว', 'success');
+        } else {
+          throw new Error(result.error);
+        }
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('notificationResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testCallReceived() {
+      try {
+        console.log('📞 [RENDERER] Call received notification...');
+        showResult('notificationResult', 'แจ้งเตือนสายเข้า...', 'loading');
+        
+        const result = await window.nativeAPI.notifyAgentEvent(
+          'Bob Smith',
+          'call_received',
+          { 
+            callerNumber: '02-123-4567',
+            queue: 'Support Queue'
+          }
+        );
+        
+        if (result.success) {
+          showResult('notificationResult', '📞 แจ้งเตือนสายเข้าสำเร็จ\n\nAgent Bob Smith มีสายเข้าใหม่', 'success');
+        }
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('notificationResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testUrgentAlert() {
+      try {
+        console.log('🚨 [RENDERER] Urgent alert...');
+        showResult('notificationResult', 'แจ้งเตือนด่วน...', 'loading');
+        
+        const result = await window.nativeAPI.showNotification(
+          '🚨 แจ้งเตือนด่วน!',
+          'ระบบโทรศัพท์มีปัญหา กรุณาตรวจสอบด่วน!',
+          true // urgent = true
+        );
+        
+        if (result.success) {
+          showResult('notificationResult', '🚨 แจ้งเตือนด่วนสำเร็จ\n\nนี่คือ notification แบบ urgent', 'success');
+        }
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('notificationResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testSoundNotification() {
+      try {
+        showResult('notificationResult', '🔊 กำลังทดสอบเสียง...', 'loading');
+        const result = await window.nativeAPI.playNotificationSound('call');
+        
+        if (result.success) {
+          showResult('notificationResult', '🔊 ทดสอบเสียงสำเร็จ!', 'success');
+        } else {
+          showResult('notificationResult', `⚠️ ${result.error}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error playing sound:', error);
+        showResult('notificationResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    function simulateIncomingCall() {
+      const availableAgents = agents.filter(a => a.status === 'available');
+      if (availableAgents.length > 0) {
+        const randomAgent = availableAgents[Math.floor(Math.random() * availableAgents.length)];
+        
+        // แจ้งเตือนสายเข้า
+        window.nativeAPI.notifyAgentEvent(randomAgent.name, 'call_received', {
+          callerNumber: '02-' + Math.floor(Math.random() * 1000) + '-' + Math.floor(Math.random() * 10000),
+          queue: 'Simulated Call'
+        });
+        
+        // เล่นเสียง
+        if (settings.soundEnabled) {
+          window.nativeAPI.playNotificationSound('call');
+        }
+        
+        // เปลี่ยนสถานะเป็น busy หลังจาก 2 วินาที
+        setTimeout(() => {
+          changeAgentStatus(randomAgent.id, 'busy');
+        }, 2000);
+        
+        showResult('fileResult', `📞 จำลองสายเข้าให้ ${randomAgent.name} สำเร็จ!`, 'success');
+      } else {
+        showResult('fileResult', '❌ ไม่มี Agent ที่ Available ในขณะนี้', 'error');
+      }
+    }
+
+    // ===== SYSTEM TRAY FUNCTIONS =====
+    function testHideToTray() {
+      try {
+        console.log('👁️ [RENDERER] ซ่อนไป tray...');
+        showResult('trayResult', '👁️ กำลังซ่อนไป system tray...', 'loading');
+        
+        setTimeout(() => {
+          window.nativeAPI.hideToTray();
+        }, 1000);
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('trayResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    function testTrayNotification() {
+      try {
+        console.log('🔔 [RENDERER] ทดสอบ notification จาก tray...');
+        showResult('trayResult', 
+          '✅ ทดสอบ System Tray สำเร็จ!\n\n' +
+          '🖱️ คลิกขวาที่ icon ใน taskbar/menubar\n' +
+          '📋 ลองเลือกเมนูต่างๆ\n' +
+          '🔄 ทดสอบเปลี่ยนสถานะจาก tray menu\n' +
+          `👥 Available Agents: ${agents.filter(a => a.status === 'available').length}`,
+          'success'
+        );
+        
+      } catch (error) {
+        console.error('❌ [RENDERER] Error:', error);
+        showResult('trayResult', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    function showShortcutsHelp() {
+      const helpDiv = document.getElementById('shortcutsHelp');
+      helpDiv.style.display = helpDiv.style.display === 'none' ? 'grid' : 'none';
+    }
+
+    // ===== SETTINGS FUNCTIONS =====
+    function toggleSound(enabled) {
+      settings.soundEnabled = enabled;
+      document.getElementById('soundEnabled').checked = enabled;
+    }
+
+    function toggleAutoRefreshSetting(enabled) {
+      settings.autoRefresh = enabled;
+      document.getElementById('autoRefresh').checked = enabled;
+      
+      if (enabled) {
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
+    }
+
+    function toggleCallSimulation(enabled) {
+      settings.simulateCalls = enabled;
+      document.getElementById('simulateCalls').checked = enabled;
+    }
+
+    async function saveSettings() {
+      const settingsToSave = {
+        agents: agents,
+        settings: settings,
+        saveTime: new Date().toISOString()
+      };
+      
+      try {
+        const result = await window.nativeAPI.saveSettings(settingsToSave);
+        if (result.success) {
+          showResult('fileResult', '✅ บันทึกการตั้งค่าสำเร็จ!', 'success');
+        }
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        showResult('fileResult', `❌ Error บันทึก settings: ${error.message}`, 'error');
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        const result = await window.nativeAPI.loadSettings();
+        if (result.success && result.settings) {
+          if (result.settings.agents) {
+            agents = result.settings.agents;
+          }
+          if (result.settings.settings) {
+            settings = result.settings.settings;
+            // อัพเดท UI ตาม settings
+            document.getElementById('soundEnabled').checked = settings.soundEnabled;
+            document.getElementById('autoRefresh').checked = settings.autoRefresh;
+            document.getElementById('simulateCalls').checked = settings.simulateCalls;
+            
+            if (settings.autoRefresh) {
+              startAutoRefresh();
+            } else {
+              stopAutoRefresh();
+            }
+          }
+          
+          renderAgents();
+          showResult('fileResult', '✅ โหลดการตั้งค่าสำเร็จ!', 'success');
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        showResult('fileResult', `❌ Error โหลด settings: ${error.message}`, 'error');
+      }
+    }
+
+    function resetSettings() {
+      if (confirm('ต้องการรีเซ็ตการตั้งค่าทั้งหมดใช่ไหม?')) {
+        agents = [
+          { 
+            id: 'AG001', 
+            name: 'Alice Johnson', 
+            status: 'available', 
+            extension: '1001', 
+            department: 'Sales', 
+            calls: 15, 
+            lastCall: '10:30',
+            loginTime: '08:00'
+          },
+          { 
+            id: 'AG002', 
+            name: 'Bob Smith', 
+            status: 'busy', 
+            extension: '1002', 
+            department: 'Support', 
+            calls: 8, 
+            lastCall: '10:25',
+            loginTime: '08:15'
+          },
+          { 
+            id: 'AG003', 
+            name: 'Carol Lee', 
+            status: 'break', 
+            extension: '1003', 
+            department: 'Sales', 
+            calls: 12, 
+            lastCall: '09:45',
+            loginTime: '08:30'
+          }
+        ];
+        
+        settings = {
+          soundEnabled: true,
+          autoRefresh: true,
+          simulateCalls: true
+        };
+        
+        document.getElementById('soundEnabled').checked = true;
+        document.getElementById('autoRefresh').checked = true;
+        document.getElementById('simulateCalls').checked = true;
+        
+        startAutoRefresh();
+        renderAgents();
+        showResult('fileResult', '✅ รีเซ็ตการตั้งค่าสำเร็จ!', 'success');
+      }
+    }
+
+    // ===== UTILITY FUNCTIONS =====
+    function showResult(elementId, message, type = 'info') {
+      const element = document.getElementById(elementId);
+      const timestamp = new Date().toLocaleTimeString('th-TH');
+      
+      element.innerHTML = `[${timestamp}] ${message}`;
+      element.className = `result-box ${type}`;
+    }
+
+    function updateTrayTooltip(availableCount) {
+      if (window.nativeAPI && window.nativeAPI.updateTrayTooltip) {
+        window.nativeAPI.updateTrayTooltip(`Available: ${availableCount}/${agents.length} agents`);
+      }
+    }
+
+    // ===== KEYBOARD SHORTCUTS =====
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case '1':
+            e.preventDefault();
+            // เปลี่ยนสถานะเป็น available สำหรับ agent แรก
+            if (agents.length > 0) {
+              changeAgentStatus(agents[0].id, 'available');
+            }
+            break;
+          case '2':
+            e.preventDefault();
+            // เปลี่ยนสถานะเป็น busy สำหรับ agent แรก
+            if (agents.length > 0) {
+              changeAgentStatus(agents[0].id, 'busy');
+            }
+            break;
+          case '3':
+            e.preventDefault();
+            // เปลี่ยนสถานะเป็น break สำหรับ agent แรก
+            if (agents.length > 0) {
+              changeAgentStatus(agents[0].id, 'break');
+            }
+            break;
+          case '4':
+            e.preventDefault();
+            // แสดงแอป
+            window.nativeAPI.showApp();
+            break;
+          case '5':
+            e.preventDefault();
+            // ซ่อนแอป
+            testHideToTray();
+            break;
+          case 'q':
+            e.preventDefault();
+            // ออกจากโปรแกรม
+            if (confirm('ต้องการออกจากโปรแกรมใช่ไหม?')) {
+              window.nativeAPI.quitApp();
+            }
+            break;
+        }
+      }
+    });
+
+    // ===== INITIALIZATION =====
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('🎨 [RENDERER] Agent Wallboard โหลดแล้ว');
+
+      // ตรวจสอบ Native APIs
+      if (window.nativeAPI) {
+        console.log('✅ [RENDERER] Native APIs พร้อมใช้งาน');
+        
+        // ตรวจสอบ methods ที่สำคัญ
+        const requiredMethods = ['openFile', 'saveFile', 'showNotification', 'notifyAgentEvent', 'playNotificationSound'];
+        const availableMethods = requiredMethods.filter(method => typeof window.nativeAPI[method] === 'function');
+        
+        console.log(`📋 Methods ที่พร้อมใช้งาน: ${availableMethods.length}/${requiredMethods.length}`);
+        
+        if (availableMethods.length === requiredMethods.length) {
+          showResult('fileResult', '✅ Native APIs ทั้งหมดพร้อมใช้งาน!\n\nเริ่มต้นระบบ Agent Wallboard...', 'success');
+        } else {
+          showResult('fileResult', '⚠️ บาง Native APIs ยังไม่พร้อม\n\nแอปอาจทำงานไม่ครบถ้วน', 'loading');
+        }
+      } else {
+        console.error('❌ [RENDERER] Native APIs ไม่พร้อม');
+        showResult('fileResult', '❌ Native APIs ไม่พร้อมใช้งาน\n\nกรุณารันแอปผ่าน Electron', 'error');
+        return;
+      }
+
+      // โหลด settings
+      loadSettings();
+      
+      // เรนเดอร์ initial data
+      renderAgents();
+      
+      // เริ่ม auto-refresh
+      if (settings.autoRefresh) {
+        startAutoRefresh();
+      }
+      
+      // แสดง welcome notification
+      setTimeout(() => {
+        window.nativeAPI.showNotification(
+          'Agent Wallboard Started',
+          `ระบบพร้อมทำงานแล้ว!\nมี ${agents.length} Agents ในระบบ`
+        );
+      }, 1000);
+    });
+
+    // รับ event เมื่อเปลี่ยนสถานะจาก tray
+    window.nativeAPI.onStatusChangedFromTray((data) => {
+      console.log('🔄 [RENDERER] ได้รับ status change จาก tray:', data);
+      
+      showResult('trayResult',
+        `🔄 เปลี่ยนสถานะจาก System Tray!\n\n` +
+        `📊 สถานะใหม่: ${data.newStatus}\n` +
+        `⏰ เวลา: ${new Date(data.timestamp).toLocaleString('th-TH')}\n\n` +
+        `✅ นี่คือ communication จาก Main → Renderer`,
+        'success'
+      );
+    });
+
+    // รับ event เมื่อเปิด settings tab
+    window.nativeAPI.onOpenSettingsTab(() => {
+      // สามารถเพิ่ม logic เพื่อ scroll ไปที่ settings section ได้
+      const settingsSection = document.querySelector('.section:nth-child(6)');
+      if (settingsSection) {
+        settingsSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "agents": [
+    {
+      "id": "AG001",
+      "name": "Alice Johnson",
+      "status": "busy",
+      "extension": "1001",
+      "department": "Sales",
+      "calls": 16,
+      "lastCall": "22:17",
+      "loginTime": "08:00"
+    },
+    {
+      "id": "AG002",
+      "name": "Bob Smith",
+      "status": "busy",
+      "extension": "1002",
+      "department": "Support",
+      "calls": 8,
+      "lastCall": "10:25",
+      "loginTime": "08:15"
+    },
+    {
+      "id": "AG003",
+      "name": "Carol Lee",
+      "status": "break",
+      "extension": "1003",
+      "department": "Sales",
+      "calls": 12,
+      "lastCall": "09:45",
+      "loginTime": "08:30"
+    }
+  ],
+  "settings": {
+    "soundEnabled": true,
+    "autoRefresh": true,
+    "simulateCalls": true
+  },
+  "saveTime": "2025-09-29T15:17:37.563Z"
+}
