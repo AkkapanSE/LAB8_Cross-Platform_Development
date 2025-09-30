@@ -1,0 +1,7 @@
+{
+  "theme": "dark",
+  "autoRefresh": false,
+  "notifications": true,
+  "soundEnabled": false,
+  "refreshInterval": 30000
+}
